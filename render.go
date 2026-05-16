@@ -59,7 +59,7 @@ func RenderBoard(b *Board, pad int) string {
 		sb.WriteString(fmt.Sprintf("%3d", x))
 	}
 	sb.WriteByte('\n')
-	for y := min.Y; y <= max.Y; y++ {
+	for y := max.Y; y >= min.Y; y-- {
 		sb.WriteString(fmt.Sprintf("%*d: ", labelW, y))
 		for x := min.X; x <= max.X; x++ {
 			sb.WriteByte(' ')
@@ -191,7 +191,7 @@ func RenderBoardTUI(b *Board, pad, minSize int, pending []Placement, cursor Coor
 		sb.WriteString(fmt.Sprintf("%3d", x))
 	}
 	sb.WriteByte('\n')
-	for y := min.Y; y <= max.Y; y++ {
+	for y := max.Y; y >= min.Y; y-- {
 		sb.WriteString(fmt.Sprintf("%*d: ", labelW, y))
 		for x := min.X; x <= max.X; x++ {
 			sb.WriteByte(' ')

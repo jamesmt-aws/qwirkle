@@ -126,9 +126,9 @@ func (m tuiModel) handleKey(key tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "?":
 		m.showHelp = !m.showHelp
 	case "up":
-		m.cursor.Y--
-	case "down":
 		m.cursor.Y++
+	case "down":
+		m.cursor.Y--
 	case "left":
 		m.cursor.X--
 	case "right":
