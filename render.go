@@ -11,6 +11,15 @@ const (
 	ansiDim   = "\x1b[2m"
 )
 
+var ansiColorNum = [NumColors]int{
+	Red:    196,
+	Orange: 208,
+	Yellow: 226,
+	Green:  46,
+	Blue:   33,
+	Purple: 165,
+}
+
 var ansiColor = [NumColors]string{
 	Red:    "\x1b[38;5;196m",
 	Orange: "\x1b[38;5;208m",
@@ -83,6 +92,103 @@ func RenderScoreboard(g *Game) string {
 	}
 	fmt.Fprintf(&sb, "   Bag: %d tiles left\n", g.BagRemaining())
 	return sb.String()
+}
+
+// RenderBoardTUI renders the board with cursor and pending placement
+// overlays. The cursor cell is reverse-video; pending placements are
+// bold+underlined.
+func RenderBoardTUI(b *Board, pad int, pending []Placement, cursor Coord) string {
+	cells := make(map[Coord]Tile, len(b.cells)+len(pending))
+	for c, t := range b.cells {
+		cells[c] = t
+	}
+	pendingSet := make(map[Coord]bool, len(pending))
+	for _, p := range pending {
+		cells[p.Coord] = p.Tile
+		pendingSet[p.Coord] = true
+	}
+
+	var min, max Coord
+	if len(cells) == 0 {
+		min, max = cursor, cursor
+	} else {
+		first := true
+		for c := range cells {
+			if first {
+				min, max = c, c
+				first = false
+				continue
+			}
+			if c.X < min.X {
+				min.X = c.X
+			}
+			if c.Y < min.Y {
+				min.Y = c.Y
+			}
+			if c.X > max.X {
+				max.X = c.X
+			}
+			if c.Y > max.Y {
+				max.Y = c.Y
+			}
+		}
+		if cursor.X < min.X {
+			min.X = cursor.X
+		}
+		if cursor.Y < min.Y {
+			min.Y = cursor.Y
+		}
+		if cursor.X > max.X {
+			max.X = cursor.X
+		}
+		if cursor.Y > max.Y {
+			max.Y = cursor.Y
+		}
+	}
+	min.X -= pad
+	min.Y -= pad
+	max.X += pad
+	max.Y += pad
+
+	const labelW = 5
+	var sb strings.Builder
+	sb.WriteString(strings.Repeat(" ", labelW+1))
+	for x := min.X; x <= max.X; x++ {
+		sb.WriteString(fmt.Sprintf("%3d", x))
+	}
+	sb.WriteByte('\n')
+	for y := min.Y; y <= max.Y; y++ {
+		sb.WriteString(fmt.Sprintf("%*d: ", labelW, y))
+		for x := min.X; x <= max.X; x++ {
+			sb.WriteByte(' ')
+			c := Coord{x, y}
+			t, has := cells[c]
+			sb.WriteString(renderCellOverlay(t, has, pendingSet[c], cursor == c))
+		}
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
+func renderCellOverlay(t Tile, has, pending, cursor bool) string {
+	codes := make([]string, 0, 4)
+	if cursor {
+		codes = append(codes, "7")
+	}
+	if pending {
+		codes = append(codes, "1", "4")
+	}
+	if has {
+		codes = append(codes, fmt.Sprintf("38;5;%d", ansiColorNum[t.Color]))
+		return "\x1b[" + strings.Join(codes, ";") + "m" + t.Code() + ansiReset
+	}
+	if !cursor && !pending {
+		return ansiDim + ".." + ansiReset
+	}
+	if len(codes) == 0 {
+		return ".."
+	}
+	return "\x1b[" + strings.Join(codes, ";") + "m" + ".." + ansiReset
 }
 
 func RenderMove(m Move) string {
