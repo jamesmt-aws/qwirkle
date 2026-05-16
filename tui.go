@@ -304,6 +304,7 @@ func (m tuiModel) View() string {
 	fmt.Fprintf(&sb, "%sQwirkle%s  —  seed %d\n\n", ansiBold, ansiReset, m.g.Seed)
 
 	sb.WriteString(RenderBoardTUI(m.g.Board(), 2, m.boardMin, m.pending, m.cursor))
+	fmt.Fprintf(&sb, "cursor: (%d, %d)\n", m.cursor.X, m.cursor.Y)
 	sb.WriteByte('\n')
 	sb.WriteString(RenderScoreboard(m.g))
 

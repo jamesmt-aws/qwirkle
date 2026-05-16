@@ -50,9 +50,27 @@ func AllTiles() []Tile {
 var colorLetter = [NumColors]byte{Red: 'R', Orange: 'O', Yellow: 'Y', Green: 'G', Blue: 'B', Purple: 'P'}
 var shapeGlyph = [NumShapes]byte{Circle: 'o', Square: 's', Diamond: 'd', Clover: 'c', Star: '*', Cross: '+'}
 
+// shapeDisplay is the 2-char glyph used in the rendered board/hand. Color
+// disambiguates between shapes that share characters, so glyphs only have
+// to be visually distinct from each other.
+var shapeDisplay = [NumShapes]string{
+	Circle:  "()",
+	Square:  "##",
+	Diamond: "<>",
+	Clover:  "&&",
+	Star:    "**",
+	Cross:   "++",
+}
+
+// Code returns the canonical 2-char identifier for the tile (color
+// letter + shape letter). Used for parsing, tests, and debug output.
 func (t Tile) Code() string {
 	return string([]byte{colorLetter[t.Color], shapeGlyph[t.Shape]})
 }
+
+// Glyph returns the 2-char display glyph for the tile's shape. Display
+// code colors the glyph using the tile's color.
+func (t Tile) Glyph() string { return shapeDisplay[t.Shape] }
 
 func (t Tile) String() string { return t.Code() }
 

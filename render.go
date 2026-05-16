@@ -29,9 +29,10 @@ var ansiColor = [NumColors]string{
 	Purple: "\x1b[38;5;165m",
 }
 
-// RenderTile returns a 2-char colored representation of a tile.
+// RenderTile returns a 2-char colored representation of a tile, using
+// the shape glyph (color disambiguates color-shape pairs visually).
 func RenderTile(t Tile) string {
-	return ansiColor[t.Color] + t.Code() + ansiReset
+	return ansiColor[t.Color] + t.Glyph() + ansiReset
 }
 
 func renderEmpty() string {
@@ -213,7 +214,7 @@ func renderCellOverlay(t Tile, has, pending, cursor bool) string {
 	}
 	if has {
 		codes = append(codes, fmt.Sprintf("38;5;%d", ansiColorNum[t.Color]))
-		return "\x1b[" + strings.Join(codes, ";") + "m" + t.Code() + ansiReset
+		return "\x1b[" + strings.Join(codes, ";") + "m" + t.Glyph() + ansiReset
 	}
 	if !cursor && !pending {
 		return ansiDim + ".." + ansiReset
