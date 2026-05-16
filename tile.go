@@ -50,16 +50,19 @@ func AllTiles() []Tile {
 var colorLetter = [NumColors]byte{Red: 'R', Orange: 'O', Yellow: 'Y', Green: 'G', Blue: 'B', Purple: 'P'}
 var shapeGlyph = [NumShapes]byte{Circle: 'o', Square: 's', Diamond: 'd', Clover: 'c', Star: '*', Cross: '+'}
 
-// shapeDisplay is the 2-char glyph used in the rendered board/hand. Color
-// disambiguates between shapes that share characters, so glyphs only have
-// to be visually distinct from each other.
+// shapeDisplay is the 2-cell-wide glyph used in the rendered board/hand.
+// Each entry is a Unicode shape chosen to resemble the corresponding
+// Qwirkle tile, doubled so the cell occupies 2 columns.
+//
+// "Cross" historically named the 8-point starburst tile in this code;
+// "Star" is the 4-point sparkle; "Clover" is the 4-prong clover/club.
 var shapeDisplay = [NumShapes]string{
-	Circle:  "()",
-	Square:  "##",
-	Diamond: "<>",
-	Clover:  "&&",
-	Star:    "**",
-	Cross:   "++",
+	Circle:  "●●", // ●●
+	Square:  "■■", // ■■
+	Diamond: "◆◆", // ◆◆
+	Clover:  "✤✤", // ✤✤  4-leaf clover / 4-prong club
+	Star:    "✦✦", // ✦✦  4-pointed sparkle
+	Cross:   "❋❋", // ❋❋  8-point starburst
 }
 
 // Code returns the canonical 2-char identifier for the tile (color
