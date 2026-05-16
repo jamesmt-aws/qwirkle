@@ -96,8 +96,10 @@ func RenderScoreboard(g *Game) string {
 
 // RenderBoardTUI renders the board with cursor and pending placement
 // overlays. The cursor cell is reverse-video; pending placements are
-// bold+underlined.
-func RenderBoardTUI(b *Board, pad int, pending []Placement, cursor Coord) string {
+// bold+underlined. `minSize` guarantees a view of at least that many
+// cells along each axis; `pad` is the additional buffer around the
+// bounding box of occupied cells + cursor.
+func RenderBoardTUI(b *Board, pad, minSize int, pending []Placement, cursor Coord) string {
 	cells := make(map[Coord]Tile, len(b.cells)+len(pending))
 	for c, t := range b.cells {
 		cells[c] = t
@@ -149,6 +151,37 @@ func RenderBoardTUI(b *Board, pad int, pending []Placement, cursor Coord) string
 	min.Y -= pad
 	max.X += pad
 	max.Y += pad
+
+	// Expand symmetrically around the midpoint to reach minSize on each axis.
+	if w := max.X - min.X + 1; w < minSize {
+		extra := minSize - w
+		min.X -= extra / 2
+		max.X += extra - extra/2
+	}
+	if h := max.Y - min.Y + 1; h < minSize {
+		extra := minSize - h
+		min.Y -= extra / 2
+		max.Y += extra - extra/2
+	}
+	// Keep cursor inside the visible range by shifting if needed.
+	if cursor.X < min.X {
+		shift := min.X - cursor.X
+		min.X -= shift
+		max.X -= shift
+	} else if cursor.X > max.X {
+		shift := cursor.X - max.X
+		min.X += shift
+		max.X += shift
+	}
+	if cursor.Y < min.Y {
+		shift := min.Y - cursor.Y
+		min.Y -= shift
+		max.Y -= shift
+	} else if cursor.Y > max.Y {
+		shift := cursor.Y - max.Y
+		min.Y += shift
+		max.Y += shift
+	}
 
 	const labelW = 5
 	var sb strings.Builder

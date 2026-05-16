@@ -25,19 +25,21 @@ type tuiModel struct {
 	mode     tuiMode
 	exchange map[int]bool
 
-	info     string // transient status line
-	botMsg   string // sticky description of the most recent non-human move
+	boardMin int // minimum board view dimension (cells per axis)
+	info     string
+	botMsg   string
 	showHelp bool
 }
 
 type botActMsg struct{ move Move }
 
-func RunTUI(g *Game, bots []Bot) error {
+func RunTUI(g *Game, bots []Bot, boardMin int) error {
 	m := tuiModel{
 		g:        g,
 		bots:     bots,
 		selected: -1,
 		exchange: map[int]bool{},
+		boardMin: boardMin,
 	}
 	if !g.Board().IsEmpty() {
 		min, _ := g.Board().Bounds()
@@ -301,7 +303,7 @@ func (m tuiModel) View() string {
 
 	fmt.Fprintf(&sb, "%sQwirkle%s  —  seed %d\n\n", ansiBold, ansiReset, m.g.Seed)
 
-	sb.WriteString(RenderBoardTUI(m.g.Board(), 2, m.pending, m.cursor))
+	sb.WriteString(RenderBoardTUI(m.g.Board(), 2, m.boardMin, m.pending, m.cursor))
 	sb.WriteByte('\n')
 	sb.WriteString(RenderScoreboard(m.g))
 

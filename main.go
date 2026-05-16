@@ -11,6 +11,7 @@ func main() {
 	seed := flag.Int64("seed", time.Now().UnixNano(), "RNG seed")
 	mode := flag.String("mode", "vs", "game mode: vs (human vs bot) | bot (bot vs bot) | hotseat (human vs human)")
 	you := flag.String("name", "You", "your display name")
+	size := flag.Int("size", 52, "minimum board view in cells per axis (TUI modes)")
 	flag.Parse()
 
 	var names []string
@@ -40,7 +41,7 @@ func main() {
 		runBotSpectator(g, bots)
 		return
 	}
-	if err := RunTUI(g, bots); err != nil {
+	if err := RunTUI(g, bots, *size); err != nil {
 		fmt.Fprintln(os.Stderr, "tui error:", err)
 		os.Exit(1)
 	}
