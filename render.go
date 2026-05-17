@@ -194,7 +194,7 @@ func RenderBoardTUI(b *Board, pad, minSize int, pending []Placement, cursor Coor
 	for y := max.Y; y >= min.Y; y-- {
 		sb.WriteString(fmt.Sprintf("%*d: ", labelW, y))
 		for x := min.X; x <= max.X; x++ {
-			sb.WriteByte(' ')
+			sb.WriteString(cursorBoxSep(x, y, cursor))
 			c := Coord{x, y}
 			t, has := cells[c]
 			sb.WriteString(renderCellOverlay(t, has, pendingSet[c], cursor == c))
@@ -202,6 +202,28 @@ func RenderBoardTUI(b *Board, pad, minSize int, pending []Placement, cursor Coor
 		sb.WriteByte('\n')
 	}
 	return sb.String()
+}
+
+// cursorBoxSep returns the separator character that precedes cell (x, y).
+// It draws a box around the cursor cell using box-drawing chars on the
+// adjacent separators; everywhere else it returns a plain space.
+func cursorBoxSep(x, y int, cursor Coord) string {
+	var ch string
+	switch {
+	case y == cursor.Y+1 && x == cursor.X:
+		ch = "┌"
+	case y == cursor.Y+1 && x == cursor.X+1:
+		ch = "┐"
+	case y == cursor.Y && (x == cursor.X || x == cursor.X+1):
+		ch = "│"
+	case y == cursor.Y-1 && x == cursor.X:
+		ch = "└"
+	case y == cursor.Y-1 && x == cursor.X+1:
+		ch = "┘"
+	default:
+		return " "
+	}
+	return "\x1b[1;33m" + ch + ansiReset
 }
 
 func renderCellOverlay(t Tile, has, pending, cursor bool) string {
