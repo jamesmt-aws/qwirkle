@@ -111,6 +111,34 @@ func RenderBoardTUI(b *Board, pad, minSize int, pending []Placement, cursor Coor
 		pendingSet[p.Coord] = true
 	}
 
+	// Bounding box of placed (incl. pending) tiles. Empty cells outside
+	// this range render as blanks so the "played area" reads as a clear
+	// region of dots and tiles.
+	var playedMin, playedMax Coord
+	hasPlayed := len(cells) > 0
+	if hasPlayed {
+		first := true
+		for c := range cells {
+			if first {
+				playedMin, playedMax = c, c
+				first = false
+				continue
+			}
+			if c.X < playedMin.X {
+				playedMin.X = c.X
+			}
+			if c.Y < playedMin.Y {
+				playedMin.Y = c.Y
+			}
+			if c.X > playedMax.X {
+				playedMax.X = c.X
+			}
+			if c.Y > playedMax.Y {
+				playedMax.Y = c.Y
+			}
+		}
+	}
+
 	var min, max Coord
 	if len(cells) == 0 {
 		min, max = cursor, cursor
@@ -197,7 +225,8 @@ func RenderBoardTUI(b *Board, pad, minSize int, pending []Placement, cursor Coor
 			sb.WriteString(cursorBoxSep(x, y, cursor))
 			c := Coord{x, y}
 			t, has := cells[c]
-			sb.WriteString(renderCellOverlay(t, has, pendingSet[c], cursor == c))
+			inRange := hasPlayed && x >= playedMin.X && x <= playedMax.X && y >= playedMin.Y && y <= playedMax.Y
+			sb.WriteString(renderCellOverlay(t, has, pendingSet[c], cursor == c, inRange))
 		}
 		sb.WriteByte('\n')
 	}
@@ -226,7 +255,7 @@ func cursorBoxSep(x, y int, cursor Coord) string {
 	return "\x1b[1;33m" + ch + ansiReset
 }
 
-func renderCellOverlay(t Tile, has, pending, cursor bool) string {
+func renderCellOverlay(t Tile, has, pending, cursor, inPlayedRange bool) string {
 	codes := make([]string, 0, 4)
 	if cursor {
 		codes = append(codes, "7")
@@ -238,13 +267,20 @@ func renderCellOverlay(t Tile, has, pending, cursor bool) string {
 		codes = append(codes, fmt.Sprintf("38;5;%d", ansiColorNum[t.Color]))
 		return "\x1b[" + strings.Join(codes, ";") + "m" + t.Glyph() + ansiReset
 	}
+	fill := "  "
+	if inPlayedRange {
+		fill = ".."
+	}
 	if !cursor && !pending {
-		return ansiDim + ".." + ansiReset
+		if inPlayedRange {
+			return ansiDim + ".." + ansiReset
+		}
+		return "  "
 	}
 	if len(codes) == 0 {
-		return ".."
+		return fill
 	}
-	return "\x1b[" + strings.Join(codes, ";") + "m" + ".." + ansiReset
+	return "\x1b[" + strings.Join(codes, ";") + "m" + fill + ansiReset
 }
 
 func RenderMove(m Move) string {
